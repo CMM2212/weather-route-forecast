@@ -1,0 +1,20 @@
+﻿@page "/"
+@inject HttpClient Http
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<p>Result: @result</p>
+
+@code {
+    string result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        result = await Http.GetStringAsync("http://localhost:7071/api/GetRouteWeather");
+    }
+
+}
