@@ -15,12 +15,12 @@ public static class RouteHelper
 
     public static async Task<JObject> GetRouteJSON(List<Waypoint> waypoints)
     {
-        // Test locally
+        /* Test locally
         if (waypoints.Count == 2)
             return JObject.Parse(await File.ReadAllTextAsync("route.json"));
         else
             return JObject.Parse(await File.ReadAllTextAsync("detailedRoute.json"));
-        // Actual implementation:
+        */ //Actual implementation:
 
         var baseUrl = "https://atlas.microsoft.com/route/directions/json";
         var queryParameters = new Dictionary<string, string>

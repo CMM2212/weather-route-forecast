@@ -15,10 +15,10 @@ public class WeatherHelper
 
     public static async Task<List<JObject>> GetWeather(List<Waypoint> waypoints)
     {
-        // Cached testing:
+        /*// Cached testing:
         var jsonArray = JArray.Parse(await File.ReadAllTextAsync("weather.json"));
         var results = jsonArray.Select(j => (JObject)j).ToList();
-        return results;
+        return results;*/
 
         // Actual implementation:
         var forecasts = new List<JObject>();
