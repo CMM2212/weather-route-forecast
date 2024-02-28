@@ -7,20 +7,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{6E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{7F9CB3F6-AFD0-444A-AAA4-C29D65F4E600}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weather.Web", "Weather.Web\Weather.Web.csproj", "{E47B8021-1575-4DCD-ABE4-BA9B852F8838}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weather.Web", "Weather.Web\Weather.Web.csproj", "{E47B8021-1575-4DCD-ABE4-BA9B852F8838}"
+	ProjectSection(ProjectDependencies) = postProject
+		{03758397-22E5-4533-9E0C-90EC5911D087} = {03758397-22E5-4533-9E0C-90EC5911D087}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weather.Api", "Weather.Api\Weather.Api.csproj", "{03758397-22E5-4533-9E0C-90EC5911D087}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weather.Api", "Weather.Api\Weather.Api.csproj", "{03758397-22E5-4533-9E0C-90EC5911D087}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		AzureOnly|Any CPU = AzureOnly|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E47B8021-1575-4DCD-ABE4-BA9B852F8838}.AzureOnly|Any CPU.ActiveCfg = AzureOnly|Any CPU
 		{E47B8021-1575-4DCD-ABE4-BA9B852F8838}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E47B8021-1575-4DCD-ABE4-BA9B852F8838}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E47B8021-1575-4DCD-ABE4-BA9B852F8838}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E47B8021-1575-4DCD-ABE4-BA9B852F8838}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03758397-22E5-4533-9E0C-90EC5911D087}.AzureOnly|Any CPU.ActiveCfg = AzureOnly|Any CPU
+		{03758397-22E5-4533-9E0C-90EC5911D087}.AzureOnly|Any CPU.Build.0 = AzureOnly|Any CPU
 		{03758397-22E5-4533-9E0C-90EC5911D087}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{03758397-22E5-4533-9E0C-90EC5911D087}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03758397-22E5-4533-9E0C-90EC5911D087}.Release|Any CPU.ActiveCfg = Release|Any CPU
