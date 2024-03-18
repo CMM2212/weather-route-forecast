@@ -9,4 +9,6 @@ namespace Weather.Api.Interfaces;
 public interface IAzureMapsClient
 {
     Task<JObject> GetRouteDataAsync(List<Waypoint> waypoints);
+    Task<JObject> GetGeolocationDataAsync(string query);
+    Task<JObject> GetReverseGeolocationDataAsync(List<Waypoint> waypoint);
 }

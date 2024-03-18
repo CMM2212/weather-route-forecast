@@ -17,4 +17,5 @@ public class Route
     public List<Waypoint> EvenlySpacedWaypoints { get; set; }
     public List<Waypoint> SampledWaypoints { get; set; }
     public JObject RouteData { get; set; }
+    public JObject SampledLocations { get; set; }
 }

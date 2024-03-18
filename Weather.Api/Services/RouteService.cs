@@ -22,16 +22,19 @@ public class RouteService : IRouteService
         this.logger = logger;
     }
 
-    public async Task<Route> ProcessRoute(Waypoint start, Waypoint end)
+    public async Task<Route> ProcessRoute(string start, string end)
     {
         logger.LogInformation("Processing route");
-        var route = new Route(start, end);
 
         try
         {
+            var startWaypoint = await GetWaypointFromLocation(start);
+            var endWaypoint = await GetWaypointFromLocation(end);
+            var route = new Route(startWaypoint, endWaypoint);
             route.Waypoints = await GetRouteWaypoints(route.Start, route.End);
             route.EvenlySpacedWaypoints = GetEvenlySpacedWaypoints(route.Waypoints);
             route.SampledWaypoints = SampleWaypoints(route.EvenlySpacedWaypoints);
+            route.SampledLocations = await GetLocationsFromWaypoints(route.SampledWaypoints);
             route.RouteData = await GetRouteData(route.SampledWaypoints);
             logger.LogInformation("Successfully processed route");
             return route;
@@ -117,4 +120,46 @@ public class RouteService : IRouteService
             throw new RouteProcessingException("Failed to extract waypoints from route data", e);
         }
     }
+
+    public async Task<Waypoint> GetWaypointFromLocation(string location)
+    {
+        logger.LogInformation("Fetching waypoint from location: {Location}", location);
+        var geolocationData = await azureMapsClient.GetGeolocationDataAsync(location);
+        return ExtractWaypointFromGeolocationData(geolocationData);
+    }
+
+    private Waypoint ExtractWaypointFromGeolocationData(JObject geolocationData)
+    {
+        if (geolocationData == null || !geolocationData["results"].Any())
+        {
+            logger.LogError("Received invalid or empty geolocation data");
+            throw new RouteProcessingException("Received invalid geolocation data");
+        }
+
+        try
+        {
+            var location = geolocationData["results"].First["position"];
+            return new Waypoint(location["lat"].Value<double>(), location["lon"].Value<double>());
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to extract waypoint from geolocation data");
+            throw new RouteProcessingException("Failed to extract waypoint from geolocation data", e);
+        }
+    }
+
+    private async Task<JObject> GetLocationsFromWaypoints(List<Waypoint> waypoints)
+    {
+        logger.LogInformation("Fetching locations from waypoints");
+        var result = new JObject();
+        
+        foreach (var waypoint in waypoints)
+        {
+            var query = $"{waypoint.Latitude},{waypoint.Longitude}";
+            var geolocationData = await azureMapsClient.GetGeolocationDataAsync(query);
+            result[query] = geolocationData;
+        }
+        
+        return result;
+    }   
 }

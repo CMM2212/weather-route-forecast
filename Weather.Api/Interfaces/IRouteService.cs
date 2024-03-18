@@ -9,5 +9,5 @@ namespace Weather.Api.Interfaces;
 
 public interface IRouteService
 {
-    Task<Route> ProcessRoute(Waypoint start, Waypoint end);
+    Task<Route> ProcessRoute(string start, string end);
 }

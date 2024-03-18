@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Weather.Api.Models;
 using Weather.Api.Interfaces;
+using Weather.Api.Services;
 
 namespace Weather.Api;
 
@@ -15,11 +16,13 @@ public class RouteWeather
 {
     readonly IRouteService routeService;
     readonly IWeatherService weatherService;
+    readonly IRateLimiterService rateLimiterService;
 
-    public RouteWeather(IRouteService  routeService, IWeatherService weatherService)
+    public RouteWeather(IRouteService  routeService, IWeatherService weatherService, IRateLimiterService rateLimiterService)
     {
         this.routeService = routeService;
         this.weatherService = weatherService;
+        this.rateLimiterService = rateLimiterService;
     }
 
     [FunctionName("GetRouteWeather")]
@@ -30,20 +33,23 @@ public class RouteWeather
         ILogger log)
     {
         log.LogInformation("Received request for route from {Start} to {End}", start, end);
-        
-        if (!TryParseWaypoint(start, out var startWaypoint) || !TryParseWaypoint(end, out var endWaypoint))
-        {
-            return new BadRequestObjectResult("Invalid start or end waypoint");
-        }
+        var clientIP = req.HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (await rateLimiterService.IsRateLimited(clientIP, TimeSpan.FromMinutes(1)))
+            return new ContentResult 
+            {
+                StatusCode = StatusCodes.Status429TooManyRequests, 
+                Content = "Too many requests. Only one request allowed per minute." 
+            };
         
         try
         {
-            var route = await routeService.ProcessRoute(startWaypoint, endWaypoint);
+            var route = await routeService.ProcessRoute(start, end);
             var forecasts = await weatherService.GetForecasts(route.SampledWaypoints);
 
             var result = new JObject
             {
                 ["route"] = route.RouteData,
+                ["locations"] = route.SampledLocations,
                 ["weather"] = forecasts
             };
 
@@ -55,20 +61,5 @@ public class RouteWeather
             log.LogError(ex, "Failed to process route and weather");
             return new StatusCodeResult(StatusCodes.Status500InternalServerError);
         }
-    }
-    
-    static bool TryParseWaypoint(string input, out Waypoint waypoint)
-    {
-        waypoint = null;
-        var parts = input.Split(',');
-        
-        if (parts.Length != 2)
-            return false;
-        
-        if (!double.TryParse(parts[0], out var latitude) || !double.TryParse(parts[1], out var longitude))
-            return false;
-        
-        waypoint = new Waypoint(latitude, longitude);
-        return true;
     }
 }

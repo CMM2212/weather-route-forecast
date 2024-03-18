@@ -12,6 +12,8 @@ public class Startup : FunctionsStartup
 {
     public override void Configure(IFunctionsHostBuilder builder)
     {
+        var config = builder.GetContext().Configuration;
+
         builder.Services.AddHttpClient(nameof(AzureMapsClient), client =>
         {
             client.BaseAddress = new Uri("https://atlas.microsoft.com/");
@@ -24,6 +26,11 @@ public class Startup : FunctionsStartup
         {
             client.BaseAddress = new Uri("https://api.open-meteo.com/");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+
+        builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>((s) =>
+        {
+            return new RateLimiterService(config["AzureWebJobsStorage"], "RateLimits");
         });
 
         builder.Services.AddSingleton<IAzureMapsClient, AzureMapsClient>();
