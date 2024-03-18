@@ -28,11 +28,6 @@ public class Startup : FunctionsStartup
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         });
 
-        builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>((s) =>
-        {
-            return new RateLimiterService(config["AzureWebJobsStorage"], "RateLimits");
-        });
-
         builder.Services.AddSingleton<IAzureMapsClient, AzureMapsClient>();
         builder.Services.AddSingleton<IRouteService, RouteService>();
         builder.Services.AddSingleton<IWeatherService, WeatherService>();

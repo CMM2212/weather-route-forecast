@@ -16,13 +16,11 @@ public class RouteWeather
 {
     readonly IRouteService routeService;
     readonly IWeatherService weatherService;
-    readonly IRateLimiterService rateLimiterService;
 
-    public RouteWeather(IRouteService  routeService, IWeatherService weatherService, IRateLimiterService rateLimiterService)
+    public RouteWeather(IRouteService  routeService, IWeatherService weatherService)
     {
         this.routeService = routeService;
         this.weatherService = weatherService;
-        this.rateLimiterService = rateLimiterService;
     }
 
     [FunctionName("GetRouteWeather")]
@@ -33,14 +31,6 @@ public class RouteWeather
         ILogger log)
     {
         log.LogInformation("Received request for route from {Start} to {End}", start, end);
-        var clientIP = req.HttpContext.Connection.RemoteIpAddress?.ToString();
-        if (await rateLimiterService.IsRateLimited(clientIP, TimeSpan.FromMinutes(1)))
-            return new ContentResult 
-            {
-                StatusCode = StatusCodes.Status429TooManyRequests, 
-                Content = "Too many requests. Only one request allowed per minute." 
-            };
-        
         try
         {
             var route = await routeService.ProcessRoute(start, end);
