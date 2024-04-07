@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using Weather.Web.Models
+@using Weather.Web.Services
 @inject HttpClient Http
+@inject WeatherForecastService WeatherForecastService
 
 <PageTitle>Weather.Web</PageTitle>
 
@@ -9,40 +11,47 @@
 Enter coordinates of path and click "Get Weather" and the route/weather data will be
 retrieved from the Azure Function API and displayed as JSON.
 <br />
-<EditForm Model="@userRouteModel" OnValidSubmit="Submit">
-    <DataAnnotationsValidator />
+@if (routeWeather != null)
+{
     <div>
-        <label for="startLat">Start Latitude:</label>
-        <InputNumber id="startLat" @bind-Value="userRouteModel.StartLatitude"/>
+        @* Display some properties from `travelData` *@
+        <p>Route Summary: @routeWeather.StartLocation meters</p>
+        @* Add more data display as needed *@
     </div>
-    <div>
-        <label for="startLong">Start Longitude:</label>
-        <InputNumber id="startLong" @bind-Value="userRouteModel.StartLongitude" />
-    </div>
-    <div>
-        <label for="endLat">End Latitude:</label>
-        <InputNumber id="endLat" @bind-Value="userRouteModel.EndLatitude" />
-    </div>
-    <div>
-        <label for="endLong">End Longitude:</label>
-        <InputNumber id="endLong" @bind-Value="userRouteModel.EndLongitude" />
-    </div>
-    <button type="submit">Get Weather</button>
-</EditForm>
+    @foreach (var item in routeWeather.RouteLegs)
+    {
+        <div>
+            <p>Route Leg Summary: @item.Address.LocalName</p>
+            <p>Route Leg Weather: @item.</p>
+        </div>
+    }
+}
+else
+{
+    <p>Loading data...</p>
+}
 
-<p>Result: @result</p>
+
+
 
 @code {
-    string? result;
-    UserRouteModel userRouteModel = new UserRouteModel();
+    private RouteWeather routeWeather;
 
-    private async Task Submit()
+    protected override async Task OnInitializedAsync()
     {
-        var apiUrl = $"http://localhost:7071/api/weather/" +
-                     $"{userRouteModel.StartLatitude},{userRouteModel.StartLongitude}/" +
-                     $"{userRouteModel.EndLatitude},{userRouteModel.EndLongitude}";
-
-        // Call the API
-        result = await Http.GetStringAsync(apiUrl);
+        routeWeather = await WeatherForecastService.GetWeatherForecastAsync("start", "end");
     }
+    // string? result;
+    // UserRouteModel userRouteModel = new UserRouteModel();
+
+    // private async Task Submit()
+    // {
+    //     var apiUrl = $"http:localhost:7071/api/weather/" +
+    //                  $"{userRouteModel.StartLatitude},{userRouteModel.StartLongitude}/" +
+    //                  $"{userRouteModel.EndLatitude},{userRouteModel.EndLongitude}";
+
+    //     Call the API
+    //     result = await Http.GetStringAsync(apiUrl);
+    // }
+
 }

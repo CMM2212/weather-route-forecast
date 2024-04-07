@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Weather.Web.Services;
 
 namespace Weather.Web
 {
@@ -12,6 +13,7 @@ namespace Weather.Web
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddScoped<WeatherForecastService>();
 
             await builder.Build().RunAsync();
         }
