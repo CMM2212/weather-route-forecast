@@ -29,7 +29,11 @@ public class OpenMeteoClient : IOpenMeteoClient
             Path = "/v1/forecast",
             Query = $"minutely_15=temperature_2m,rain&" +
                     $"latitude={waypoint.Latitude}&longitude={waypoint.Longitude}" +
-                    $"&forecast_minutely_15=96"
+                    $"&forecast_minutely_15=96" +
+                    "&temperature_unit=fahrenheit" +
+                    "&precipitation_unit=inch" +
+                    "&wind_speed_unit=mph" +
+                    "&timezone=America%2FChicago"
         }.Uri;
         logger.LogInformation("Requesting weather from Open Meteo: {RequestUri}", requestUri);
         try

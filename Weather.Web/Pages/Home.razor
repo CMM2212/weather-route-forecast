@@ -1,45 +1,54 @@
 ﻿@page "/"
 @using Weather.Web.Models
 @using Weather.Web.Services
+@using Weather.Web.Models.API
 @inject HttpClient Http
 @inject WeatherForecastService WeatherForecastService
 
-<PageTitle>Weather.Web</PageTitle>
+<PageTitle>Weather Route Planner</PageTitle>
 
-<h1>Weather/Route Request Demo</h1>
+<h1>Weather/Route Demo</h1>
 
-Enter coordinates of path and click "Get Weather" and the route/weather data will be
-retrieved from the Azure Function API and displayed as JSON.
-<br />
-@if (routeWeather != null)
+<div>
+    <input type="text" @bind="fromAddress" placeholder="From Address" />
+    <input type="text" @bind="toAddress" placeholder="To Address" />
+    <button @onclick="GetRouteAndWeather">Get Weather</button>
+</div>
+
+@if (route != null)
 {
     <div>
-        @* Display some properties from `travelData` *@
-        <p>Route Summary: @routeWeather.StartLocation meters</p>
-        @* Add more data display as needed *@
+        <p>Route Summary:</p>
     </div>
-    @foreach (var item in routeWeather.RouteLegs)
+
+    @foreach (var forecast in forecasts)
     {
         <div>
-            <p>Route Leg Summary: @item.Address.LocalName</p>
-            <p>Route Leg Weather: @item.</p>
+            <p>Forecast Time: @forecast.Time</p>
+            <p>Forecast Location: @forecast.Location.Name</p>
+            <p>Forecast Temperature: @forecast.Temperature</p>
+            <p>Forecast Precipitation: @forecast.Precipitation</p>
         </div>
     }
 }
 else
 {
-    <p>Loading data...</p>
+    <p>Enter addresses and click "Get Weather" to see the forecast.</p>
 }
 
 
 
-
 @code {
-    private RouteWeather routeWeather;
 
-    protected override async Task OnInitializedAsync()
+    private string fromAddress;
+    private string toAddress;
+    private Route route;
+    private List<WeatherForecast> forecasts;
+
+    private async Task GetRouteAndWeather()
     {
-        routeWeather = await WeatherForecastService.GetWeatherForecastAsync("start", "end");
+        route = await WeatherForecastService.GetWeatherForecastAsync(fromAddress, toAddress);
+        forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(route, 0, 15);
     }
     // string? result;
     // UserRouteModel userRouteModel = new UserRouteModel();

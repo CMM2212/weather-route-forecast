@@ -1,6 +1,9 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using Weather.Web.Models;
+using Weather.Web.Models.API;
 using static System.Net.WebRequestMethods;
 
 namespace Weather.Web.Services;
@@ -14,42 +17,162 @@ public class WeatherForecastService
         this.httpClient = httpClient;
     }
 
-    public async Task<RouteWeather> GetWeatherForecastAsync(string startLocation, string endLocation)
+    public async Task<Route> GetWeatherForecastAsync(string startLocation, string endLocation)
     {
-        // Example: Fetch route weather data from your API
-        //var routeWeatherJson = await httpClient.GetStringAsync($"api/routeWeather?start={startLocation}&end={endLocation}");
-        var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/fargoToMinneapolisResponse.json");
-        var routeWeather = RouteWeather.FromJson(routeWeatherJson);
-        return routeWeather;
+        var routeWeatherJson = await httpClient.GetStringAsync($"api/routeWeather?start={startLocation}&end={endLocation}");
+       //  var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/fargoToMinneapolisResponse.json?v=3");
+        var route =ParseRouteFromJson(routeWeatherJson);
+        return route;
     }
 
-    public List<WeatherForecast> Get15MinutelyWeatherForecast(RouteWeather routeWeather, int minutesOffSet)
+    public Route ParseRouteFromJson(string routeJson)
     {
-        var weatherForecasts = new List<WeatherForecast>();
-        var startTime = routeWeather.RouteLegs.First().Time.AddMinutes(minutesOffSet);
-        var endTime = routeWeather.RouteLegs.Last().Time.AddMinutes(minutesOffSet);
+        using var doc = JsonDocument.Parse(routeJson);
+        var root = doc.RootElement;
 
-        var time = startTime;
+        // root["route"]["routes"][0]
+        var routeData = root.GetProperty("route").GetProperty("routes").EnumerateArray().First();
 
-        while (time <= endTime)
+        // root["route"]["routes"][0]["legs"]
+        var legs = routeData.GetProperty("legs").EnumerateArray().ToArray();
+        var locations = root.GetProperty("locations").EnumerateObject().Select(pair => pair.Value).ToArray();
+        var weather = root.GetProperty("weather").GetProperty("forecasts").EnumerateArray().ToArray();
+        var routeStartTime = legs.First().GetProperty("summary").GetProperty("departureTime").GetDateTime();
+
+        var route = new Route()
         {
-            var nextLeg = routeWeather.RouteLegs.FirstOrDefault(leg => leg.Time >= time) ?? routeWeather.RouteLegs.Last();
-            var forecast = GetForecastForTime(nextLeg, time);
-            weatherForecasts.Add(forecast);
-            time = time.AddMinutes(15);
+            Legs = []
+        };
+
+        for (int i = 0; i < legs.Length; i++)
+        {
+            var leg = ParseLegFromJson(legs[i], locations[i], weather[i], routeStartTime);
+            route.Legs.Add(leg);
         }
-    return weatherForecasts;
+
+        var finalLeg = CreateFinalLeg(legs.Last(), weather.Last(), locations.Last(), routeStartTime);
+        route.Legs.Add(finalLeg);
+
+        route.Start = route.Legs.First().Start;
+        route.End = finalLeg.Start;
+
+        return route;
     }
 
-    private WeatherForecast GetForecastForTime(RouteLeg routeLeg, DateTime time)
+    public Leg ParseLegFromJson(JsonElement legJson, JsonElement locationJson, JsonElement weatherJson, DateTime routeStartTime)
     {
-        var forecast = new WeatherForecast();
-        var leg = routeLeg;
-        var forecastTime = time - leg.Time;
-        var forecastIndex = (int)forecastTime.TotalMinutes / 15;
-        forecast.Rain = leg.Address.LocalName;
-        forecast.Temperature = leg.Address.LocalName;
-        return forecast;
+        var startTime = legJson.GetProperty("summary").GetProperty("departureTime").GetDateTime();
+        var startLocation = legJson.GetProperty("points").EnumerateArray().First();
+        var locationName = ParseLocationNameFromJson(locationJson);
+        var location = new Location()
+        {
+            Latitude = startLocation.GetProperty("latitude").GetDouble(),
+            Longitude = startLocation.GetProperty("longitude").GetDouble(),
+            Name = locationName
+        };
+
+        var forecasts = ParseForecastsFromJson(weatherJson, routeStartTime, location);
+
+        var leg = new Leg()
+        {
+            Time = startTime,
+            Start = location,
+            Forecasts = forecasts
+        };
+        return leg;
     }
 
+
+    private string ParseLocationNameFromJson(JsonElement locationJson)
+    {
+        var bestMatchLocation = locationJson.GetProperty("results").EnumerateArray().First();
+        var address = bestMatchLocation.GetProperty("address");
+        if (address.TryGetProperty("localName", out var localName) && !string.IsNullOrWhiteSpace(localName.GetString()))
+            return localName.GetString();
+        if (address.TryGetProperty("neighbourhood", out var neighbourhood) && !string.IsNullOrWhiteSpace(neighbourhood.GetString()))
+            return neighbourhood.GetString();
+        if (address.TryGetProperty("municipality", out var municipality) && !string.IsNullOrWhiteSpace(municipality.GetString()))
+            return municipality.GetString();
+        return address.GetProperty("freeformAddress").GetString();
+
+    }
+
+    private List<WeatherForecast> ParseForecastsFromJson(JsonElement weatherJson, DateTime startTime, Location location)
+    {
+        var forecasts = new List<WeatherForecast>();
+        var minutely15Forecasts = weatherJson.GetProperty("minutely_15");
+        var temperatures = minutely15Forecasts.GetProperty("temperature_2m").EnumerateArray().ToArray();
+        var rains = minutely15Forecasts.GetProperty("rain").EnumerateArray().ToArray();
+        for (int i = 0; i < temperatures.Count(); i++)
+        {
+            var time = startTime.AddMinutes(i * 15);
+            var temperature = temperatures[i].GetDouble();
+            var rain = rains[i].GetDouble();
+            forecasts.Add(new WeatherForecast()
+            {
+                Time = time,
+                Location = location,
+                Temperature = temperature,
+                Precipitation = rain
+            });
+        }
+        return forecasts;
+    }
+
+    private Leg CreateFinalLeg(JsonElement lastLegJson, JsonElement finalWeatherJson, JsonElement finalLocationJson, DateTime routeStartTime)
+    {
+        var startTime = lastLegJson.GetProperty("summary").GetProperty("arrivalTime").GetDateTime();
+
+        var startLocation = lastLegJson.GetProperty("points").EnumerateArray().Last();
+        var locationName = ParseLocationNameFromJson(finalLocationJson);
+        var location = new Location()
+        {
+            Latitude = startLocation.GetProperty("latitude").GetDouble(),
+            Longitude = startLocation.GetProperty("longitude").GetDouble(),
+            Name = locationName
+        };
+
+        var forecasts = ParseForecastsFromJson(finalWeatherJson, routeStartTime, location);
+
+        var leg = new Leg()
+        {
+            Time = startTime,
+            Start = location,
+            Forecasts = forecasts
+        };
+        return leg;
+    }
+
+    public List<WeatherForecast> GetWeatherForecastByTimeAndInterval(Route route, int offsetMinutes, int intervalMinutes)
+    {
+        var result = new List<WeatherForecast>();
+        var legs = GetLegsByTimeInterval(route, intervalMinutes);
+        for (int i = 0; i < legs.Count; i++)
+        {
+            var leg = legs[i];
+            int index = (i * intervalMinutes + offsetMinutes) / 15;
+            var forecast = leg.Forecasts[index];
+            result.Add(forecast);
+        }
+
+        return result;
+    }
+
+    public List<Leg> GetLegsByTimeInterval(Route route, int intervalMinutes)
+    {
+        var legs = new List<Leg>();
+        var currentTime = route.Legs.First().Time;
+        var endTime = route.Legs.Last().Time;
+
+        //Console.WriteLine($"Current time: {currentTime}, end time: {endTime}, leg count: {legs.Count}");
+        while (currentTime < endTime)
+        {
+            var currentLeg = route.Legs.First(leg => leg.Time >= currentTime);
+            legs.Add(currentLeg);
+            currentTime = currentTime.AddMinutes(intervalMinutes);
+            //Console.WriteLine($"Leg added: {currentLeg.Time}, current time: {currentTime}, end time: {endTime}, leg count: {legs.Count}");
+        }
+        legs.Add(route.Legs.Last());
+        return legs;
+    }
 }
