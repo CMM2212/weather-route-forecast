@@ -19,8 +19,8 @@ public class WeatherForecastService
 
     public async Task<Route> GetWeatherForecastAsync(string startLocation, string endLocation)
     {
-        var routeWeatherJson = await httpClient.GetStringAsync($"api/weather/{startLocation}/{endLocation}");
-       //  var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/fargoToMinneapolisResponse.json?v=3");
+       // var routeWeatherJson = await httpClient.GetStringAsync($"api/weather/{startLocation}/{endLocation}");
+        var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/fargoToMinneapolisResponse.json?v=3");
         var route =ParseRouteFromJson(routeWeatherJson);
         return route;
     }
@@ -101,22 +101,53 @@ public class WeatherForecastService
     {
         var forecasts = new List<WeatherForecast>();
         var minutely15Forecasts = weatherJson.GetProperty("minutely_15");
-        var temperatures = minutely15Forecasts.GetProperty("temperature_2m").EnumerateArray().ToArray();
-        var rains = minutely15Forecasts.GetProperty("rain").EnumerateArray().ToArray();
-        for (int i = 0; i < temperatures.Count(); i++)
+        var temperature = minutely15Forecasts.GetProperty("temperature_2m").EnumerateArray().ToArray();
+        var humidity = minutely15Forecasts.GetProperty("relative_humidity_2m").EnumerateArray().ToArray();
+        var apparentTemperature = minutely15Forecasts.GetProperty("apparent_temperature").EnumerateArray().ToArray();
+        var precipitation = minutely15Forecasts.GetProperty("precipitation").EnumerateArray().ToArray();
+        var rain = minutely15Forecasts.GetProperty("rain").EnumerateArray().ToArray();
+        var snowfall = minutely15Forecasts.GetProperty("snowfall").EnumerateArray().ToArray();
+        var snowFallHeight = minutely15Forecasts.GetProperty("snowfall_height").EnumerateArray().ToArray();
+        var sunshineDuration = minutely15Forecasts.GetProperty("sunshine_duration").EnumerateArray().ToArray();
+        var weatherCode = minutely15Forecasts.GetProperty("weather_code").EnumerateArray().ToArray();
+        var windSpeed = minutely15Forecasts.GetProperty("wind_speed_10m").EnumerateArray().ToArray();
+        var windDirection = minutely15Forecasts.GetProperty("wind_direction_10m").EnumerateArray().ToArray();
+        var windGusts = minutely15Forecasts.GetProperty("wind_gusts_10m").EnumerateArray().ToArray();
+        var visibility = minutely15Forecasts.GetProperty("visibility").EnumerateArray().ToArray();
+        var lightningPotential = minutely15Forecasts.GetProperty("lightning_potential").EnumerateArray().ToArray();
+        var isDay = minutely15Forecasts.GetProperty("is_day").EnumerateArray().ToArray();
+
+        for (int i = 0; i < temperature.Count(); i++)
         {
             var time = startTime.AddMinutes(i * 15);
-            var temperature = temperatures[i].GetDouble();
-            var rain = rains[i].GetDouble();
             forecasts.Add(new WeatherForecast()
             {
                 Time = time,
                 Location = location,
-                Temperature = temperature,
-                Precipitation = rain
-            });
+                Temperature = temperature[i].GetDouble(),
+                Humidity = humidity[i].GetDouble(),
+                ApparentTemperature = apparentTemperature[i].GetDouble(),
+                Precipitation = precipitation[i].GetDouble(),
+                Rain = rain[i].GetDouble(),
+                Snow = snowfall[i].GetDouble(),
+                SnowFallHeight = ParseDouble(snowFallHeight[i]),
+                SunshineDuration = sunshineDuration[i].GetDouble(),
+                WeatherCode = weatherCode[i].GetInt32(),
+                WindSpeed = windSpeed[i].GetDouble(),
+                WindDirection = windDirection[i].GetInt32(),
+                WindGust = windGusts[i].GetDouble(),
+                Visibility = visibility[i].GetDouble(),
+                Lightning = ParseDouble(snowFallHeight[i]),
+                IsDay = isDay[i].GetInt32() == 1
+
+        });
         }
         return forecasts;
+    }
+
+    private double ParseDouble(JsonElement element)
+    {
+        return element.ValueKind == JsonValueKind.Number ? element.GetDouble() : 0;
     }
 
     private Leg CreateFinalLeg(JsonElement lastLegJson, JsonElement finalWeatherJson, JsonElement finalLocationJson, DateTime routeStartTime)

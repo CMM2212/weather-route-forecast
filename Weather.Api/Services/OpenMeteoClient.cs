@@ -26,14 +26,19 @@ public class OpenMeteoClient : IOpenMeteoClient
 
         var requestUri = new UriBuilder(httpClient.BaseAddress)
         {
+         
             Path = "/v1/forecast",
-            Query = $"minutely_15=temperature_2m,rain&" +
+            Query = $"minutely_15=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain," +
+                    $"snowfall,snowfall_height,sunshine_duration,weather_code,wind_speed_10m," +
+                    $"wind_direction_10m,wind_gusts_10m,visibility,lightning_potential,is_day&" +
                     $"latitude={waypoint.Latitude}&longitude={waypoint.Longitude}" +
                     $"&forecast_minutely_15=96" +
                     "&temperature_unit=fahrenheit" +
                     "&precipitation_unit=inch" +
                     "&wind_speed_unit=mph" +
                     "&timezone=America%2FChicago"
+
+
         }.Uri;
         logger.LogInformation("Requesting weather from Open Meteo: {RequestUri}", requestUri);
         try
