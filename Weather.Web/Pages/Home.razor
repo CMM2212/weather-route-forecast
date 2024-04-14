@@ -55,6 +55,38 @@ else
     <p>Enter addresses and click "Get Weather" to see the forecast.</p>
 }
 
+@if (gridData != null)
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Start Time Offset</th>
+                @if (gridData.Count > 0)
+                {
+                    for (int i = 0; i < gridData[0].Count; i++) // Assumes all rows will have the same number of columns
+                    {
+                        <th>@(i * intervalMinutes) min into trip</th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (int j = 0; j < gridData.Count; j++)
+            {
+                <tr>
+                    <td>@(j * startOffsetInterval) min from now</td>
+                    @foreach (var forecast in gridData[j])
+                    {
+                        <td style="@GetPrecipitationColor(forecast.WeatherCode)" title="Temp: @forecast.Temperature°F, Rain: @forecast.Precipitation in">
+                            
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 
 
 @code {
@@ -64,10 +96,63 @@ else
     private Route route;
     private List<WeatherForecast> forecasts;
 
+
+    List<List<WeatherForecast>> gridData = new List<List<WeatherForecast>>();
+    int totalDurationMinutes = 120;
+    int intervalMinutes = 15;
+    int totalStartingTimes = 10;
+    int startOffsetInterval = 30;
+
+
     private async Task GetRouteAndWeather()
     {
         route = await WeatherForecastService.GetWeatherForecastAsync(fromAddress, toAddress);
         forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(route, 0, 15);
+        PopulateWeatherGrid();
+    }
+    private void PopulateWeatherGrid()
+    {
+        for (int startOffset = 0;
+            startOffset < totalStartingTimes * startOffsetInterval;
+            startOffset += startOffsetInterval)
+        {
+            var forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(
+                route, startOffset, intervalMinutes);
+            gridData.Add(forecasts);
+        }
+    }
+
+    private string GetTemperatureColor(double temperature)
+    {
+
+        double minTemp = 32; 
+        double maxTemp = 100; 
+
+        double normalizedTemp = (temperature - minTemp) / (maxTemp - minTemp);
+
+        int r = (int)(255 * normalizedTemp); 
+        int b = 255 - r;
+        int g = 0; 
+        r = Math.Clamp(r, 0, 255);
+        b = Math.Clamp(b, 0, 255);
+
+        return $"background-color: rgb({r},{g},{b});";
+    }
+
+    private string GetPrecipitationColor(double precipitation)
+    {
+        double minPrecip = 0;
+        double maxPrecip = 0.005;
+
+        double normalizedPrecip = (precipitation - minPrecip) / (maxPrecip - minPrecip);
+
+        int r = 40;
+        int b = (int)(255 * normalizedPrecip - 40);
+        int g = 255 - b - 100;
+        b = Math.Clamp(b, 0, 255);
+        g = Math.Clamp(g, 0, 255);
+
+        return $"background-color: rgb({r},{g},{b});";
     }
 
 

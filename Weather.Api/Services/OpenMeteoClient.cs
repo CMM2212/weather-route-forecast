@@ -34,7 +34,7 @@ public class OpenMeteoClient : IOpenMeteoClient
                     $"latitude={waypoint.Latitude}&longitude={waypoint.Longitude}" +
                     $"&forecast_minutely_15=96" +
                     "&temperature_unit=fahrenheit" +
-                    "&precipitation_unit=inch" +
+                    "&precipitation_unit=mm" +
                     "&wind_speed_unit=mph" +
                     "&timezone=America%2FChicago"
 
