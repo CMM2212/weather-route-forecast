@@ -1,0 +1,83 @@
+﻿@using Weather.Web.Models.API
+@using Weather.Web.Services
+@using Weather.Web.Utilities
+@inject WeatherForecastService WeatherForecastService
+
+
+@if (IsLoading)
+{
+    <p>Calculating weather...</p>
+}
+else if (GridData != null)
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Start Time Offset</th>
+                @if (GridData.Count > 0)
+                {
+                    for (int i = 0; i < GridData[0].Count; i++) // Assumes all rows have the same number of columns
+                    {
+                        <th>@(i * IntervalMinutes) min into trip</th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (int j = 0; j < GridData.Count; j++)
+            {
+                <tr>
+                    <td>@(j * StartOffsetMinutes) min from now</td>
+                    @foreach (var forecast in GridData[j])
+                    {
+                        <td style="@WeatherUtilities.GetPrecipitationColor(forecast.Precipitation)" title="Temp: @forecast.Temperature°F, Rain: @forecast.Precipitation in">
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public Route Route { get; set; }
+
+    [Parameter]
+    public int StartOffsetMinutes {get; set; }
+
+    [Parameter]
+    public int IntervalMinutes { get; set; }
+
+    [Parameter]
+    public int TotalStartingTimes { get; set; }
+
+    private List<List<WeatherForecast>> GridData { get; set; }
+    private bool IsLoading = true;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("OnParametersSetAsync");
+        Console.WriteLine(Route);
+        if (Route != null)
+            await PopulateWeatherGrid();
+    }
+
+    private async Task PopulateWeatherGrid()
+    {
+        Console.WriteLine("Populating Grade");
+        IsLoading = true;
+        GridData = new List<List<WeatherForecast>>();
+        for (int startOffset = 0;
+            startOffset < TotalStartingTimes * StartOffsetMinutes;
+            startOffset += StartOffsetMinutes)
+        {
+            var forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(
+                Route, startOffset, IntervalMinutes);
+            GridData.Add(forecasts);
+        }
+        IsLoading = false;
+        Console.WriteLine("Populated Grade");
+    }
+}

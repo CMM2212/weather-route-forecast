@@ -1,0 +1,41 @@
+﻿@using Weather.Web.Models.API
+@using Weather.Web.Utilities
+
+@if (Forecasts != null & Forecasts.Any())
+{
+    <table class="table table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Time</th>
+                <th>Location</th>
+                <th>Weather Code</th>
+                <th>Temperature (°F)</th>
+                <th>Wind Speed (mph)</th>
+                <th>Feels Like (°F)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in Forecasts)
+            {
+                <tr>
+                    <td>@forecast.Time.ToString("HH:mm")</td>
+                    <td>@forecast.Location.Name</td>
+                    <td><i class="wi @WeatherUtilities.GetWeatherIcon(forecast.WeatherCode, forecast.IsDay) large-icon"></i></td>
+                    <td>@forecast.Temperature.ToString("0.0")°F</td>
+                    <td>@forecast.WindSpeed.ToString("0.0") mph</td>
+                    <td>@forecast.ApparentTemperature.ToString("0.0")°F</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Failed to load data.</p>
+}
+
+
+@code {
+    [Parameter]
+    public List<WeatherForecast> Forecasts { get; set; }
+}
