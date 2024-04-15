@@ -1,0 +1,48 @@
+﻿@using System.Text.Json
+@using Weather.Web.Models.API
+@using Weather.Web.Utilities
+@inject IJSRuntime JSRuntime
+
+@if (Route != null)
+{
+    <div id="map" style="height: 500px;">My Map</div>
+    <div>map loaded</div>
+}
+
+@code {
+    [Parameter]
+    public Route Route { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("OnParametersSetAsync");
+        await UpdateMap();
+    }
+
+    private async Task UpdateMap()
+    {
+        Console.WriteLine("UpdateMap");
+        Console.WriteLine(Route);
+        if (Route != null)
+        {
+            var routeJson = JsonSerializer.Serialize(new
+            {
+                start = Route.Start,
+                end = Route.End,
+                legs = Route.Legs.Select(leg => new
+                {
+                    start = leg.Start,
+                    time = leg.Time.ToString("h:mm tt"),
+                    weather = new
+                    {
+                        icon = WeatherUtilities.GetWeatherIcon(leg.Forecasts.FirstOrDefault()?.WeatherCode ?? 0, leg.Forecasts.FirstOrDefault()?.IsDay ?? false),
+                        summary = "Summary here",
+                        temperature = leg.Forecasts.FirstOrDefault()?.Temperature ?? 0
+                    }
+                })
+            });
+
+            await JSRuntime.InvokeVoidAsync("initializeMap", routeJson);
+        }
+    }
+}

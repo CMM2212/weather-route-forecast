@@ -18,12 +18,12 @@
             @foreach (var forecast in Forecasts)
             {
                 <tr>
-                    <td>@forecast.Time.ToString("HH:mm")</td>
+                    <td>@forecast.Time.ToString("h:mm tt")</td>
                     <td>@forecast.Location.Name</td>
                     <td><i class="wi @WeatherUtilities.GetWeatherIcon(forecast.WeatherCode, forecast.IsDay) large-icon"></i></td>
-                    <td>@forecast.Temperature.ToString("0.0")°F</td>
+                    <td>@forecast.Temperature.ToString("0.0")° F</td>
                     <td>@forecast.WindSpeed.ToString("0.0") mph</td>
-                    <td>@forecast.ApparentTemperature.ToString("0.0")°F</td>
+                    <td>@forecast.ApparentTemperature.ToString("0.0")° F</td>
                 </tr>
             }
         </tbody>

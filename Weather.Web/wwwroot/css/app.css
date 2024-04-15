@@ -6,6 +6,43 @@
     font-size: 36px;
 }
 
+
+.marker-background {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    box-shadow: 3px;
+}
+
+.leaflet-marker-icon {
+
+}
+
+.marker-hidden, .marker-visible {
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition for opacity and transform */
+}
+
+
+.marker-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.5);
+}
+
+.marker-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+.wi-map {
+    font-size: 1.5em;
+}
+
 .invalid {
     outline: 1px solid red;
 }
