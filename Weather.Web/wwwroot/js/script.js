@@ -1,9 +1,11 @@
 ﻿
 
 var allMarkers = [];
+var map;
 function initializeMap(routeData) {
     routeData = JSON.parse(routeData);
-    var map = L.map('map').setView([routeData.start.Latitude, routeData.start.Longitude], 13);
+
+    map = L.map('map').setView([routeData.start.Latitude, routeData.start.Longitude], 13);
     
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

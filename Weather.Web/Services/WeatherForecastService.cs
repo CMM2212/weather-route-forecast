@@ -19,10 +19,11 @@ public class WeatherForecastService
 
     public async Task<Route> GetWeatherForecastAsync(string startLocation, string endLocation)
     {
-        var routeWeatherJson = await httpClient.GetStringAsync($"api/weather/{startLocation}/{endLocation}");
-        //var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/nashvilleToJacksonResponse.json");
+        Console.WriteLine($"Getting weather forecast for {startLocation} to {endLocation}. at api/weather/{startLocation}/{endLocation}");
+        //var routeWeatherJson = await httpClient.GetStringAsync($"api/weather/{startLocation}/{endLocation}");
+        var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/nashvilleToJacksonResponse.json");
         //var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/fargoToMinneapolisResponse.json");
-        var route =ParseRouteFromJson(routeWeatherJson);
+        var route = ParseRouteFromJson(routeWeatherJson);
         return route;
     }
 

@@ -42,7 +42,7 @@ public class RouteWeather
                 ["locations"] = route.SampledLocations,
                 ["weather"] = forecasts
             };
-
+          
             return new OkObjectResult(result.ToString());
 
         }

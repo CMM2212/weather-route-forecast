@@ -49,11 +49,21 @@
                 </div>
             </div>
         </div>
-
+        <div class="col-md-6">
+            <label for="timeOffsetDropdown">Start Time Offset:</label>
+            <select id="timeOffsetDropdown" class="form-select" @onchange="UpdateTimeOffset">
+                <option value="0">Now</option>
+                <option value="30">+30 minutes</option>
+                <option value="60">+60 minutes</option>
+                <option value="90">+90 minutes</option>
+                <option value="120">+120 minutes</option>
+            </select>
+        </div>
         <div class="row mt-3">
             <div class="col-12">
                 @if (currentView == "table")
                 {
+
                     <ForecastTable Forecasts="@forecasts" />
                 }
                 else if (currentView == "grid")
@@ -62,7 +72,7 @@
                 }
                 else if (currentView == "map")
                 {
-                    <div id="map" style="height: 400px;">My </div>
+                    <div id="map" style="height: 400px;" key="@mapKey">My </div>
                 }
             </div>
         </div>
@@ -82,16 +92,18 @@
     private Route route;
     private List<WeatherForecast> forecasts;
     private string currentView = "table";
+    private int mapKey = 0;
 
     private bool isLoading;
     private bool mapLoaded;
 
 
-    List<List<WeatherForecast>> gridData = new List<List<WeatherForecast>>();
-    int totalDurationMinutes = 120;
-    int intervalMinutes = 15;
-    int totalStartingTimes = 10;
-    int startOffsetInterval = 30;
+    private List<List<WeatherForecast>> gridData = new List<List<WeatherForecast>>();
+    private int totalDurationMinutes = 120;
+    private int intervalMinutes = 15;
+    private int totalStartingTimes = 10;
+    private int startOffsetInterval = 30;
+    private int timeOffset = 0;
 
     private void ShowMap()
     {
@@ -103,6 +115,7 @@
         if (route != null)
         {
             Console.WriteLine("Actually updating map");
+            DateTime startTime = route.Legs.First().Time;
             var routeJson = JsonSerializer.Serialize(new
             {
                 start = route.Start,
@@ -110,28 +123,72 @@
                 legs = route.Legs.Select(leg => new
                 {
                     start = leg.Start,
-                    time = leg.Time.ToString("h:mm tt"),
-                    weather = new
-                    {
-                        icon = WeatherUtilities.GetWeatherIcon(leg.Forecasts.FirstOrDefault()?.WeatherCode ?? 0, leg.Forecasts.FirstOrDefault()?.IsDay ?? false),
-                        summary = "Summary here",
-                        temperature = leg.Forecasts.FirstOrDefault()?.Temperature ?? 0,
-                        windSpeed = leg.Forecasts.FirstOrDefault()?.WindSpeed ?? 0,
-                    }
+                    time = (leg.Time.AddMinutes(timeOffset)).ToString("h:mm tt"),
+                    weather = GetForecastData(startTime, leg)
                 })
             });
-
             JSRuntime.InvokeVoidAsync("initializeMap", routeJson);
         }
+    }
+
+    private dynamic GetForecastData(DateTime startTime, Leg leg)
+    {
+        int index = GetForecastIndex(startTime, leg.Time, timeOffset, intervalMinutes);
+        var forecast = leg.Forecasts.ElementAtOrDefault(index);
+        return new
+        {
+            icon = WeatherUtilities.GetWeatherIcon(forecast?.WeatherCode ?? 0, forecast?.IsDay ?? false),
+            summary = "Summary here",
+            temperature = forecast?.Temperature ?? 0,
+            windSpeed = forecast?.WindSpeed ?? 0,
+        };
     }
 
 
     private async Task GetRouteAndWeather()
     {
         isLoading = true;
-        route = await WeatherForecastService.GetWeatherForecastAsync(fromAddress, toAddress);
-        forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(route, 0, 15);
+        try
+        {
+            route = await WeatherForecastService.GetWeatherForecastAsync(fromAddress, toAddress);
+            forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(route, 0, 15);
+        } 
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex.Message);
+        }
         isLoading = false;
+    }
+
+    private async Task UpdateTimeOffset(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out int newOffset))
+        {
+            timeOffset = newOffset;
+            if (route != null)
+            {
+                forecasts = WeatherForecastService.GetWeatherForecastByTimeAndInterval(route, timeOffset, 15);
+                if (currentView == "map")
+                {
+                    currentView = "none";
+                    await Task.Delay(1);
+                    StateHasChanged();
+                    UpdateMap();
+                    currentView = "map";
+                } else
+                {
+                    StateHasChanged();
+                    UpdateMap();
+                }
+            }
+        }
+    }
+
+    private int GetForecastIndex(DateTime startTime, DateTime legTime, int timeOffset, int intervalMinutes)
+    {
+        legTime = legTime.AddMinutes(timeOffset);
+        return (int)Math.Floor((legTime - startTime).TotalMinutes / intervalMinutes);
     }
 
     protected override void OnAfterRender(bool firstRender)
