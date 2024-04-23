@@ -5,32 +5,38 @@ public static class WeatherUtilities
     public static string GetTemperatureColor(double temperature)
     {
 
-        double minTemp = 32;
+        double minTemp = 10;
         double maxTemp = 100;
 
-        double normalizedTemp = (temperature - minTemp) / (maxTemp - minTemp);
-
-        int r = (int)(255 * normalizedTemp);
-        int b = 255 - r;
-        int g = 0;
-        r = Math.Clamp(r, 0, 255);
-        b = Math.Clamp(b, 0, 255);
-
-        return $"background-color: rgb({r},{g},{b});";
+        return GetColorGradient(temperature, minTemp, maxTemp, (0, 50, 255), (255, 20, 20), false);
     }
 
     public static string GetPrecipitationColor(double precipitation)
     {
-        double minPrecip = 0;
-        double maxPrecip = 0.005;
 
-        double normalizedPrecip = (precipitation - minPrecip) / (maxPrecip - minPrecip);
+        return GetColorGradient(precipitation, 0, 3, (247, 247, 247), (55, 170, 173), true);
+    }
 
-        int r = 40;
-        int b = (int)(255 * normalizedPrecip - 40);
-        int g = 255 - b - 100;
-        b = Math.Clamp(b, 0, 255);
-        g = Math.Clamp(g, 0, 255);
+    public static string GetWindSpeedColor(double windSpeed)
+    {
+        return GetColorGradient(windSpeed, 0, 30, (247, 247, 247), (55, 170, 173), true);
+    }
+
+
+    public static string GetColorGradient(double value, double minValue, double maxValue, (int r, int g, int b) startColor, (int r, int g, int b) endColor, bool sqrt)
+    {
+        double normalizedValue = Math.Clamp((value - minValue) / (maxValue - minValue), 0, 1);
+
+        double factor;
+        if (sqrt)
+            factor = Math.Sqrt(normalizedValue);
+        else
+            factor = normalizedValue;
+
+
+        int r = (int)(startColor.r + factor * (endColor.r - startColor.r));
+        int g = (int)(startColor.g + factor * (endColor.g - startColor.g));
+        int b = (int)(startColor.b + factor * (endColor.b - startColor.b));
 
         return $"background-color: rgb({r},{g},{b});";
     }

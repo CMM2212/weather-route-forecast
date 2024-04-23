@@ -20,8 +20,8 @@ public class WeatherForecastService
     public async Task<Route> GetWeatherForecastAsync(string startLocation, string endLocation)
     {
         Console.WriteLine($"Getting weather forecast for {startLocation} to {endLocation}. at api/weather/{startLocation}/{endLocation}");
-        //var routeWeatherJson = await httpClient.GetStringAsync($"api/weather/{startLocation}/{endLocation}");
-        var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/nashvilleToJacksonResponse.json");
+        var routeWeatherJson = await httpClient.GetStringAsync($"api/weather/{startLocation}/{endLocation}");
+        //var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/nashvilleToJacksonResponse.json");
         //var routeWeatherJson = await httpClient.GetStringAsync("https://localhost:7165/fargoToMinneapolisResponse.json");
         var route = ParseRouteFromJson(routeWeatherJson);
         return route;
@@ -46,12 +46,15 @@ public class WeatherForecastService
             Legs = []
         };
 
+        // Parse all but final leg
         for (int i = 0; i < legs.Length; i++)
         {
             var leg = ParseLegFromJson(legs[i], locations[i], weather[i], routeStartTime);
             route.Legs.Add(leg);
         }
 
+
+        // Parse final leg
         var finalLeg = CreateFinalLeg(legs.Last(), weather.Last(), locations.Last(), routeStartTime);
         route.Legs.Add(finalLeg);
 

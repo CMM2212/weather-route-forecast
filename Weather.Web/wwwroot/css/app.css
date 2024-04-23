@@ -6,6 +6,56 @@
     font-size: 36px;
 }
 
+.table-fixed {
+    table-layout: fixed;
+    width: 100%; 
+}
+
+.grid-cell-dark {
+    color: #105196 !important;
+    font-weight: 900;
+}
+
+.grid-cell-light {
+    color: white;
+    font-weight: 900;
+}
+
+
+.table-fixed td:first-child, .table-fixed th:first-child {
+    width: 100px;
+}
+
+.table-fixed thead tr {
+    height: 100px;
+}
+
+ .table-fixed td, .table-fixed th {
+        width: 70px;
+        height: 40px;
+        text-align: center;
+        vertical-align: middle;
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+}
+
+
+.table-fixed td {
+    padding: 5px;
+    font-size: 1.0em;
+}
+
+.wind {
+    font-size: 3em !important;
+    color: #105196 !important;
+
+}
+
+
+td .wi {
+    font-size: 2em;
+    color: white;
+}
 
 .marker-background {
     display: flex;
@@ -23,7 +73,7 @@
 }
 
 .marker-hidden, .marker-visible {
-    transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition for opacity and transform */
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 

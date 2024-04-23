@@ -10,15 +10,20 @@
 }
 else if (GridData != null)
 {
-    <table class="table table-bordered">
+    <table class="table table-bordered table-fixed">
         <thead>
             <tr>
-                <th>Start Time Offset</th>
+                <th>
+                    Departure \ Location
+                </th>
                 @if (GridData.Count > 0)
                 {
-                    for (int i = 0; i < GridData[0].Count; i++) // Assumes all rows have the same number of columns
+                    for (int i = 0; i < GridData[0].Count; i++)
                     {
-                        <th>@(i * IntervalMinutes) min into trip</th>
+                        <th>
+                            @FormatTripTime(i) <br/>
+                            @GridData[0][i].Location.Name
+                        </th>
                     }
                 }
             </tr>
@@ -27,10 +32,14 @@ else if (GridData != null)
             @for (int j = 0; j < GridData.Count; j++)
             {
                 <tr>
-                    <td>@(j * StartOffsetMinutes) min from now</td>
+                    <td>
+                        @Route.Legs.FirstOrDefault().Time.AddMinutes(j * StartOffsetMinutes).ToString("h:mm tt")<br />
+                        Departure
+                    </td>
                     @foreach (var forecast in GridData[j])
                     {
-                        <td style="@WeatherUtilities.GetPrecipitationColor(forecast.Precipitation)" title="Temp: @forecast.Temperature°F, Rain: @forecast.Precipitation in">
+                        <td class="grid-cell-@(WeatherType == "Temperature" ? "light" : "dark")" style="@GetCellColor(forecast)" title="@GenerateTitle(forecast)">
+                            @((MarkupString)@GetCellContent(forecast))
                         </td>
                     }
                 </tr>
@@ -52,6 +61,9 @@ else if (GridData != null)
     [Parameter]
     public int TotalStartingTimes { get; set; }
 
+    [Parameter]
+    public string WeatherType { get; set; }
+
     private List<List<WeatherForecast>> GridData { get; set; }
     private bool IsLoading = true;
 
@@ -62,6 +74,7 @@ else if (GridData != null)
         Console.WriteLine(Route);
         if (Route != null)
             await PopulateWeatherGrid();
+        ;
     }
 
     private async Task PopulateWeatherGrid()
@@ -79,5 +92,73 @@ else if (GridData != null)
         }
         IsLoading = false;
         Console.WriteLine("Populated Grade");
+    }
+
+    private string GetCellColor(WeatherForecast forecast)
+    {
+        if (WeatherType == "Temperature")
+            return WeatherUtilities.GetTemperatureColor(forecast.Temperature);
+        else if (WeatherType == "Wind")
+            return WeatherUtilities.GetWindSpeedColor(forecast.WindSpeed);
+        else if (WeatherType == "Precipitation")
+            return WeatherUtilities.GetPrecipitationColor(forecast.Precipitation);
+        else
+            return "background-color: #173249";
+    }
+
+    private string GetCellContent(WeatherForecast forecast)
+    {
+        if (WeatherType == "Temperature")
+            return forecast.Temperature.ToString("0") + " °F";
+        else if (WeatherType == "Wind")
+            return GetWindDirection(forecast.WindDirection) + "<br>" + forecast.WindSpeed.ToString("0") + "mph";
+        else if (WeatherType == "Precipitation")
+            return forecast.Precipitation.ToString("0.0") + "mm";
+        else if (WeatherType == "WeatherIcon")
+            return $"<i class=\"wi {WeatherUtilities.GetWeatherIcon(forecast.WeatherCode, forecast.IsDay)}\"></i>";
+        else
+            return "";
+    }
+
+    private string GetWindDirection(double angle)
+    {
+        angle = angle % 360;
+
+        var icon = angle switch
+        {
+            >= 337.5 or < 22.5 => "wi-direction-up",
+            >= 22.5 and < 67.5 => "wi-direction-up-right",
+            >= 67.5 and < 112.5 => "wi-direction-right",
+            >= 112.5 and < 157.5 => "wi-direction-down-right",
+            >= 157.5 and < 202.5 => "wi-direction-down", 
+            >= 202.5 and < 247.5 => "wi-direction-down-left",
+            >= 247.5 and < 292.5 => "wi-direction-left",  
+            >= 292.5 and < 337.5 => "wi-direction-up-left",
+            _ => "wi-na"
+        };
+
+        return $"<i class=\"wi wind {icon}\"></i>";
+    }
+
+    private string FormatTripTime(int i)
+    {
+        var time = i * IntervalMinutes;
+        var minutes = time % 60;
+        var hours = time / 60;
+        if (minutes == 0)
+            return $"{hours} hr";
+        else if (hours == 0)
+            return $"{minutes} min";
+        else
+            return $"{hours} hr {minutes} min";
+    }
+
+    private string GenerateTitle(WeatherForecast forecast)
+    {
+        return $"Time: {forecast.Time.ToString("h:mm tt")}\n" +
+               $"Location: {forecast.Location.Name}\n" +
+                $"Temperature: {forecast.Temperature}°F\n" +
+               $"Wind Speed: {forecast.WindSpeed}mph\n" +
+               $"Precipitation: {forecast.Precipitation}mm\n";
     }
 }
