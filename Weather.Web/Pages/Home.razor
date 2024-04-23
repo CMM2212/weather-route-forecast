@@ -10,10 +10,11 @@
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Weather Route Planner</PageTitle>
+<div class="bg-primary text-white text-center p-2">
+    <h1>Dynamic Weather Forecasting</h1>
+</div>
 
-<div class="container mt-3">
-     <h1 class="mb-3">Dynamic Weather Forecasting</h1>
-
+<div class="bg-dark container pt-4 pb-2">
     <div class="row">
         <div class="col-md-6">
             <AddressInput Placeholder="From Address"
@@ -42,10 +43,12 @@
     {
         <div class="row mt-3">
             <div class="col-12">
-                <div class="btn-group" role="group" aria-label="View Selector">
-                    <button class="btn btn-secondary @(currentView == "table" ? "active" : "")" @onclick="@(() => currentView = "table")">Forecast Table</button>
-                    <button class="btn btn-secondary @(currentView == "grid" ? "active" : "")" @onclick="@(() => currentView = "grid")">Weather Grid</button>
-                    <button class="btn btn-secondary @(currentView == "map" ? "active" : "")" @onclick="@(() => ShowMap())">Map</button>
+                <div class="btn-toolbar mb-3" role="toolbar">
+                    <div class="btn-group mr-2" role="group" aria-label="First group">
+                        <button class="btn btn-secondary @(currentView == "table" ? "active" : "")" @onclick="@(() => currentView = "table")">Forecast Table</button>
+                        <button class="btn btn-secondary @(currentView == "grid" ? "active" : "")" @onclick="@(() => currentView = "grid")">Weather Grid</button>
+                        <button class="btn btn-secondary @(currentView == "map" ? "active" : "")" @onclick="@(() => ShowMap())">Map</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -77,7 +80,7 @@
                 </select>
             </div>
         }
-
+        <hr />
         <div class="row mt-3">
             <div class="col-12">
                 @if (currentView == "table")
@@ -90,14 +93,14 @@
                 }
                 else if (currentView == "map")
                 {
-                    <div id="map" style="height: 400px;">My </div>
+                    <div id="map" style="height: 600px;">My </div>
                 }
             </div>
         </div>
     }
     else
     {
-        <p>Enter addresses and click "Get Weather" to see the forecast.</p>
+        <p class="pt-2">Enter addresses and click "Get Weather" to see the forecast.</p>
     }
 </div>
 
