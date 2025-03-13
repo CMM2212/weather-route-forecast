@@ -1,8 +1,6 @@
 
 # Dynamic Weather Forecasting for Road Trips
 
-⚠️ App no longer served online as Azure student trial has ended.
-
 ## Project Overview
 
 Making long-distance road trips can be stressful due to unpredictable weather along the route. This project addresses that challenge by integrating GPS routing data with real-time weather forecasts, creating precise weather predictions for travelers throughout their journey.
@@ -14,7 +12,7 @@ This full-stack application combines Blazor WebAssembly and Azure Functions, uti
 ## 📂 Project Structure
 
 ```
-📦 weather-route-forecast/
+📦 Weather-Route-Forecast/
 ├── 📁 Weather.Api        # Azure Functions backend
 ├── 📁 Weather.Web        # Blazor WebAssembly frontend
 ├── 📁 docs               # Project documentation and paper
