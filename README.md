@@ -32,6 +32,20 @@ This full-stack application combines Blazor WebAssembly and Azure Functions, uti
 
 ----------
 ## Screenshots
+Demonstration of the weather table showing locations/times along the route and the corresponding weather for that location/time:
+
+![Weather Table](docs/forecast-table.png)
+
+Demonstration of weather grid showing the different weather the user would encounter at each location based on their departure time.
+The x-axis represents the location along the trip at half hour intervals, the y-axis represents the departure time, and the grid represents the weather at that location given that departure time.
+(Wind speed, temperature, precipitation are other alternatives to display in the grid instead of the weather icon)
+
+![Weather Grid](docs/weather-grid.png)
+
+Demonstration of the weather map depicting the route and he weather icons along the way. When scrolled over, the icons show he time you will pass through that location and more details about the weather at that time at that location.
+
+![Weather Map](docs/weather-map.png)
+
 
 ----------
 
@@ -47,8 +61,8 @@ This full-stack application combines Blazor WebAssembly and Azure Functions, uti
 **Clone the repository:**
 
 ```bash
-git clone https://github.com/CMM2212/Weather-Route-Forecast.git
-cd Weather-Route-Forecast
+git clone https://github.com/CMM2212/weather-route-forecast.git
+cd weather-route-forecast
 
 ```
 
@@ -85,7 +99,7 @@ Open the application at http://localhost:5000/.
 ## 📄 Paper and Presentation Slides
 Paper and slides for Student Academic Conference presentation:
 
-[ **Read the Full Paper (PDF)**](docs/Weather_Route_Forecasting.pdf)
+[ **Read the Full Paper (PDF)**](docs/paper.pdf)
 
-[ **View Slide Presentation (PDF)**](docs/Weather_Route_Forecasting.pdf)
+[ **View Slide Presentation (PDF)**](docs/slides.pdf)
 
